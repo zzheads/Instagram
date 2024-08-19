@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 struct ContentView: View {
 	enum Error: Swift.Error, LocalizedError {
@@ -74,6 +75,9 @@ struct ContentView: View {
 				reloadButton
 			}
 		)
+		.onAppear {
+			UIView.appearance(whenContainedInInstancesOf: [UIAlertController.self]).backgroundColor = colorScheme == .dark ? .darkGray : .white
+		}
 	}
 	
 	private func button(_ title: Title, action: @escaping (() -> Void)) -> some View {
