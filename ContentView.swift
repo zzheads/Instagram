@@ -8,23 +8,36 @@
 import SwiftUI
 
 struct ContentView: View {
+	enum Error: Swift.Error, LocalizedError {
+		case unableToLoad(URL)
+	}
+	
 	enum Title: String {
 		case picker = "Please select mode:"
 		case save = "Save"
 		case reload = "Reload"
 	}
 
+	@Environment(\.colorScheme) private var colorScheme
+	@State private var isMenuPresented: Bool = false
+	@State private var error: Error?
 	@State private var selectedAddress: Address = UserDefaultsService.shared.address ?? .apple
-
-	private var webView: WebView = WebView((UserDefaultsService.shared.address ?? .apple).address)
 	
+	private var webView: WebView = WebView((UserDefaultsService.shared.address ?? .apple).address)
+		
 	private var picker: some View {
 		HStack {
 			Text(Title.picker.rawValue)
 				.font(.headline)
 			Picker(
 				Title.picker.rawValue,
-				selection: $selectedAddress,
+				selection: .init(
+					get: { selectedAddress },
+					set: {
+						selectedAddress = $0
+						isMenuPresented.toggle()
+					}
+				),
 				content: {
 					ForEach(Address.allCases, id: \.self) {
 						Text($0.name)
@@ -51,12 +64,16 @@ struct ContentView: View {
 	var body: some View {
 		VStack {
 			picker
-			HStack {
+			webView
+		}
+		.alert(
+			"You have selected: \(selectedAddress.name)",
+			isPresented: $isMenuPresented,
+			actions: {
 				saveButton
 				reloadButton
 			}
-			webView
-		}
+		)
 	}
 	
 	private func button(_ title: Title, action: @escaping (() -> Void)) -> some View {
