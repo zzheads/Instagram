@@ -16,6 +16,7 @@ struct ContentView: View {
 	public enum ButtonType: String {
 		case save
 		case reload
+		case cancel
 	}
 
 	@Environment(\.colorScheme) private var colorScheme
@@ -39,11 +40,50 @@ struct ContentView: View {
 	
 	private var menuView: some View {
 		PickerMenuView(
-			title: "Please select address:",
 			isPresented: $isMenuPresented,
 			selectedAddress: $selectedAddress,
-			content: { buttons }
+			content: {
+				VStack {
+					HStack {
+						button(.cancel, action: { isMenuPresented.toggle() })
+						Spacer()
+						button(.save, action: {
+							UserDefaultsService.shared.address = selectedAddress
+							webView.load(selectedAddress.address)
+							isMenuPresented.toggle()
+						})
+					}
+					picker
+					HStack {
+						button(.reload, action: {
+							webView.load(selectedAddress.address)
+							isMenuPresented.toggle()
+						})
+						Spacer()
+						Spacer()
+					}
+				}
+				.frame(width: 300)
+			}
 		)
+	}
+	
+	private var picker: some View {
+		HStack {
+			Text("Select address:")
+				.font(.headline)
+			Spacer()
+			Picker(
+				"Select address",
+				selection: $selectedAddress,
+				content: {
+					ForEach(Address.allCases, id: \.self) {
+						Text($0.name)
+					}
+				}
+			)
+			.pickerStyle(.menu)
+		}
 	}
 	
 	private var buttons: some View {
