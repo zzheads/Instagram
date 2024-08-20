@@ -25,7 +25,11 @@ struct ContentView: View {
 	private var mainView: some View {
 		ZStack {
 			VStack {
-				Button("Show menu") { isMenuPresented.toggle() }
+				Button("Show menu") {
+					withAnimation {
+						isMenuPresented.toggle()
+					}
+				}
 				webView
 			}
 			.allowsHitTesting(!isMenuPresented)
@@ -51,9 +55,9 @@ struct ContentView: View {
 	var body: some View {
 		mainView
 			.blur(radius: isMenuPresented ? 10 : 0)
-			.overlay { isMenuPresented ? menuView : nil }
-			.matchedGeometryEffect(id: isMenuPresented, in: animation)
-			.animation(.linear, value: menuView)
+			.overlay { isMenuPresented ?
+				menuView.transition(.move(edge: .bottom)) : nil
+			}
 			.onAppear {
 				if let address = userDefaultsService.address {
 					selectedAddress = address
