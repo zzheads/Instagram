@@ -7,20 +7,43 @@
 
 import SwiftUI
 
-public struct PickerMenuView<Content: View>: View {
-	@Environment(\.colorScheme) private var colorScheme
+public struct PickerMenuView: View, Equatable {
+	public static func == (lhs: PickerMenuView, rhs: PickerMenuView) -> Bool {
+		lhs.model == rhs.model
+	}
+	
+	@State private var model: Model
 
-	@Binding public var isPresented: Bool
-	@Binding public var selectedAddress: Address
-	@ViewBuilder public var content: (() -> Content)
+	public init(model: Model) {
+		self.model = model
+	}
+	
+	private var contentView: some View {
+		ContentView(
+			colorScheme: model.colorScheme,
+			selectedAddress: model.selectedAddress,
+			onCancel: {
+				model.isPresented.wrappedValue = false
+			},
+			onSave: {
+				model.saveAction?()
+				model.reloadAction?()
+				model.isPresented.wrappedValue = false
+			},
+			onReload: {
+				model.reloadAction?()
+				model.isPresented.wrappedValue = false
+			}
+		)
+	}
 	
 	public var body: some View {
 		VStack(spacing: 0) {
-			content()
+			contentView
 		}
 		.padding(.all)
-		.foregroundColor(colorScheme == .dark ? Color.white : Color.black)
-		.background(colorScheme == .dark ? Color.black : Color.white)
+		.foregroundColor(model.colorScheme == .dark ? Color.white : Color.black)
+		.background(model.colorScheme == .dark ? Color.black : Color.white)
 		.background(Color.white)
 		.cornerRadius(12)
 	}

@@ -5,7 +5,7 @@
 //  Created by Alexey Papin on 14.08.2024.
 //
 
-public enum Address: String, CaseIterable, Codable {
+public enum Address: String, CaseIterable, Codable, Equatable {
 	case google
 	case instagram
 	case apple

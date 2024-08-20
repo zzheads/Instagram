@@ -13,16 +13,14 @@ struct ContentView: View {
 		case unableToLoad(URL)
 	}
 	
-	public enum ButtonType: String {
-		case save
-		case reload
-		case cancel
-	}
-
 	@Environment(\.colorScheme) private var colorScheme
+	
+	private let userDefaultsService = UserDefaultsService.shared
+	private var webView = WebView()
+
 	@State private var isMenuPresented: Bool = false
-	@State private var selectedAddress: Address = UserDefaultsService.shared.address ?? .apple
-	private var webView = WebView((UserDefaultsService.shared.address ?? .apple).address)
+	@State private var selectedAddress: Address = .apple
+	@Namespace private var animation
 	
 	private var mainView: some View {
 		ZStack {
@@ -37,83 +35,31 @@ struct ContentView: View {
 				.edgesIgnoringSafeArea(.all)
 		}
 	}
-	
-	private var menuView: some View {
+		
+	private var menuView: PickerMenuView {
 		PickerMenuView(
-			isPresented: $isMenuPresented,
-			selectedAddress: $selectedAddress,
-			content: {
-				VStack {
-					HStack {
-						button(.cancel, action: { isMenuPresented.toggle() })
-						Spacer()
-						button(.save, action: {
-							UserDefaultsService.shared.address = selectedAddress
-							webView.load(selectedAddress.address)
-							isMenuPresented.toggle()
-						})
-					}
-					picker
-					HStack {
-						button(.reload, action: {
-							webView.load(selectedAddress.address)
-							isMenuPresented.toggle()
-						})
-						Spacer()
-						Spacer()
-					}
-				}
-				.frame(width: 300)
-			}
+			model: .init(
+				isPresented: $isMenuPresented,
+				selectedAddress: $selectedAddress,
+				colorScheme: colorScheme,
+				saveAction: { userDefaultsService.address = selectedAddress },
+				reloadAction: { webView.load(selectedAddress.address) }
+			)
 		)
 	}
-	
-	private var picker: some View {
-		HStack {
-			Text("Select address:")
-				.font(.headline)
-			Spacer()
-			Picker(
-				"Select address",
-				selection: $selectedAddress,
-				content: {
-					ForEach(Address.allCases, id: \.self) {
-						Text($0.name)
-					}
-				}
-			)
-			.pickerStyle(.menu)
-		}
-	}
-	
-	private var buttons: some View {
-		HStack(spacing: 16) {
-			button(.save, action: {
-				UserDefaultsService.shared.address = selectedAddress
-				webView.load(selectedAddress.address)
-				isMenuPresented.toggle()
-			})
-			button(.reload, action: {
-				webView.load(selectedAddress.address)
-				isMenuPresented.toggle()
-			})
-		}
-		.padding(.init(top: 0, leading: 16, bottom: 16, trailing: 16))
-
-	}
-	
+			
 	var body: some View {
 		mainView
 			.blur(radius: isMenuPresented ? 10 : 0)
 			.overlay { isMenuPresented ? menuView : nil }
-	}
-	
-	private func button(_ type: ButtonType, action: @escaping (() -> Void)) -> some View {
-		Button(type.rawValue.capitalized, action: action)
-			.frame(width: 100, height: 44)
-			.foregroundColor(colorScheme == .dark ? Color.white : Color.black)
-			.background(colorScheme == .dark ? Color.gray : Color.gray.opacity(0.5))
-			.cornerRadius(8)
+			.matchedGeometryEffect(id: isMenuPresented, in: animation)
+			.animation(.linear, value: menuView)
+			.onAppear {
+				if let address = userDefaultsService.address {
+					selectedAddress = address
+					webView.load(address.address)
+				}
+			}
 	}
 }
 

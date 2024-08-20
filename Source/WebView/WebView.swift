@@ -12,7 +12,7 @@ struct WebView: UIViewRepresentable {
 	private let webView: WKWebView
 	@ObservedObject var model: Model
 	
-	public init(_ urlString: String) {
+	public init(_ urlString: String? = nil) {
 		self.init(Model(url: urlString))
 	}
 
@@ -26,7 +26,7 @@ struct WebView: UIViewRepresentable {
 	}
 	
 	func makeUIView(context: Context) -> WKWebView {
-		guard let url = URL(string: model.url) else {
+		guard let urlString = model.url, let url = URL(string: urlString) else {
 			return webView
 		}
 		

@@ -14,9 +14,9 @@ extension WebView {
 		@Published var shouldGoBack: Bool = false
 		@Published var title: String = ""
 		
-		var url: String
+		var url: String?
 		
-		init(url: String) {
+		init(url: String?) {
 			self.url = url
 		}
 	}
